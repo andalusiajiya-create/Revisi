@@ -1,0 +1,147 @@
+<style>
+h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.wrap{padding:1rem 0}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.2rem}
+.scard{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 14px;text-align:center}
+.scard .num{font-size:18px;font-weight:500;color:var(--color-text-primary)}
+.scard .lbl{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.filters{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.filters select{font-size:12px;padding:5px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary)}
+table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+th{background:var(--color-background-secondary);color:var(--color-text-secondary);font-weight:500;text-align:left;padding:9px 10px;border-bottom:1px solid var(--color-border-tertiary);font-size:12px}
+td{padding:8px 10px;border-bottom:0.5px solid var(--color-border-tertiary);vertical-align:middle;color:var(--color-text-primary);font-size:13px}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--color-background-secondary)}
+.badge{display:inline-block;font-size:11px;padding:2px 7px;border-radius:var(--border-radius-md);font-weight:500}
+.b-bensin{background:#E1F5EE;color:#085041}
+.b-flazz{background:#EEEDFE;color:#3C3489}
+.b-beli{background:#E6F1FB;color:#0C447C}
+.b-lain{background:#F1EFE8;color:#444441}
+.nominal{text-align:right;font-weight:500}
+.no{color:var(--color-text-secondary);font-size:12px}
+</style>
+<div class="wrap">
+<h2 class="sr-only">Tabel transaksi April–Mei 2026</h2>
+<div class="summary">
+  <div class="scard"><div class="num">57</div><div class="lbl">Total transaksi</div></div>
+  <div class="scard"><div class="num" id="s-nominal">Rp 3.547.925</div><div class="lbl">Total pengeluaran</div></div>
+  <div class="scard"><div class="num" id="s-filter">57</div><div class="lbl">Ditampilkan</div></div>
+</div>
+<div class="filters">
+  <select id="f-cat" onchange="render()">
+    <option value="">Semua kategori</option>
+    <option value="bensin">Bensin</option>
+    <option value="flazz">Top Up Flazz</option>
+    <option value="beli">Pembelian</option>
+    <option value="lain">Lainnya</option>
+  </select>
+  <select id="f-bulan" onchange="render()">
+    <option value="">Apr & Mei</option>
+    <option value="4">April</option>
+    <option value="5">Mei</option>
+  </select>
+</div>
+<table>
+  <thead>
+    <tr>
+      <th style="width:32px">No</th>
+      <th style="width:105px">Tanggal</th>
+      <th>Deskripsi Transaksi</th>
+      <th style="width:100px;text-align:right">Nominal</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+</div>
+<script>
+const data=[
+  {d:"2026-04-09",desc:"Pembayaran Bensin",nom:70000,cat:"bensin"},
+  {d:"2026-04-10",desc:"Top Up Flazz",nom:30000,cat:"flazz"},
+  {d:"2026-04-12",desc:"Pembayaran Bensin",nom:70000,cat:"bensin"},
+  {d:"2026-04-14",desc:"Pembelian Tom & Jerry Label (1 Pcs)",nom:10000,cat:"beli"},
+  {d:"2026-04-16",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
+  {d:"2026-04-16",desc:"Pembayaran Bensin",nom:100000,cat:"bensin"},
+  {d:"2026-04-17",desc:"Isi Nitrogen Kendaraan Operasional",nom:20000,cat:"lain"},
+  {d:"2026-04-17",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
+  {d:"2026-04-20",desc:"Pembelian Supreme Cable 3x2,5 mm (8 m)",nom:238000,cat:"beli"},
+  {d:"2026-04-20",desc:"Pembelian Steker L (5 Pcs)",nom:60925,cat:"beli"},
+  {d:"2026-04-20",desc:"Pembelian Stop Kontak 1 L (3 Pcs)",nom:52500,cat:"beli"},
+  {d:"2026-04-21",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
+  {d:"2026-04-22",desc:"Pembayaran Bensin",nom:100000,cat:"bensin"},
+  {d:"2026-04-22",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
+  {d:"2026-04-23",desc:"Pembayaran Bensin",nom:100000,cat:"bensin"},
+  {d:"2026-04-23",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
+  {d:"2026-04-23",desc:"Top Up Flazz",nom:30000,cat:"flazz"},
+  {d:"2026-04-23",desc:"Top Up Flazz",nom:20000,cat:"flazz"},
+  {d:"2026-04-24",desc:"Pembayaran Bensin",nom:100000,cat:"bensin"},
+  {d:"2026-04-24",desc:"Top Up Flazz",nom:100000,cat:"flazz"},
+  {d:"2026-04-27",desc:"Pembayaran Bensin",nom:100000,cat:"bensin"},
+  {d:"2026-04-28",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
+  {d:"2026-04-28",desc:"Steam Mobil Operasional",nom:35000,cat:"lain"},
+  {d:"2026-04-29",desc:"Pembayaran Bensin",nom:100000,cat:"bensin"},
+  {d:"2026-04-29",desc:"Pembayaran Bensin",nom:70000,cat:"bensin"},
+  {d:"2026-04-29",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
+  {d:"2026-04-29",desc:"Top Up Flazz",nom:30000,cat:"flazz"},
+  {d:"2026-04-30",desc:"Pembelian Steker Broco (5 Pcs)",nom:65000,cat:"beli"},
+  {d:"2026-04-30",desc:"Pembelian Uticon 2 Lubang (4 Pcs)",nom:60000,cat:"beli"},
+  {d:"2026-04-30",desc:"Pembelian TC 5 (3 Btg)",nom:37500,cat:"beli"},
+  {d:"2026-04-30",desc:"Pembelian T Broco (1 Pcs)",nom:25000,cat:"beli"},
+  {d:"2026-04-30",desc:"Pembayaran Bensin",nom:100000,cat:"bensin"},
+  {d:"2026-04-30",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
+  {d:"2026-05-01",desc:"Pembayaran Bensin",nom:50000,cat:"bensin"},
+  {d:"2026-05-01",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
+  {d:"2026-05-03",desc:"Pembayaran Bensin",nom:50000,cat:"bensin"},
+  {d:"2026-05-03",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
+  {d:"2026-05-05",desc:"Pembayaran Bensin",nom:50000,cat:"bensin"},
+  {d:"2026-05-05",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
+  {d:"2026-05-06",desc:"Pembelian Tom & Jerry Label (2 Pcs)",nom:20000,cat:"beli"},
+  {d:"2026-05-06",desc:"Pembelian Kabel Etrena 3x2.5 (3 m)",nom:72000,cat:"beli"},
+  {d:"2026-05-06",desc:"Pembelian TC 5 (1 Pcs)",nom:12500,cat:"beli"},
+  {d:"2026-05-06",desc:"Pembelian Uticon 1 L (1 Pcs)",nom:10000,cat:"beli"},
+  {d:"2026-05-06",desc:"Pembayaran Bensin",nom:100000,cat:"bensin"},
+  {d:"2026-05-07",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
+  {d:"2026-05-07",desc:"Pembayaran Bensin",nom:70000,cat:"bensin"},
+  {d:"2026-05-08",desc:"Top Up Flazz",nom:30000,cat:"flazz"},
+  {d:"2026-05-08",desc:"Pembayaran Bensin",nom:100000,cat:"bensin"},
+  {d:"2026-05-08",desc:"Top Up Flazz",nom:30000,cat:"flazz"},
+  {d:"2026-05-09",desc:"Pembayaran Bensin",nom:50000,cat:"bensin"},
+  {d:"2026-05-09",desc:"Top Up Flazz",nom:30000,cat:"flazz"},
+  {d:"2026-05-11",desc:"Isi Bensin",nom:50000,cat:"bensin"},
+  {d:"2026-05-12",desc:"Isi Bensin",nom:50000,cat:"bensin"},
+  {d:"2026-05-13",desc:"Isi Bensin",nom:30000,cat:"bensin"},
+  {d:"2026-05-13",desc:"Isi Bensin",nom:100000,cat:"bensin"},
+  {d:"2026-05-18",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
+  {d:"2026-05-18",desc:"Pembelian Steker T",nom:25000,cat:"beli"},
+];
+
+const bulanID=["","Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agt","Sep","Okt","Nov","Des"];
+function fmtTgl(s){
+  const [y,m,dd]=s.split("-");
+  return `${parseInt(dd)} ${bulanID[parseInt(m)]} ${y}`;
+}
+function fmt(n){return"Rp "+n.toLocaleString('id-ID');}
+const badgeMap={bensin:"badge b-bensin",flazz:"badge b-flazz",beli:"badge b-beli",lain:"badge b-lain"};
+const labelMap={bensin:"Bensin",flazz:"Top Up Flazz",beli:"Pembelian",lain:"Lainnya"};
+
+function render(){
+  const cat=document.getElementById('f-cat').value;
+  const bln=document.getElementById('f-bulan').value;
+  const filtered=data.filter(d=>{
+    const m=d.d.split("-")[1];
+    if(cat && d.cat!==cat) return false;
+    if(bln && m!==bln.padStart(2,"0")) return false;
+    return true;
+  });
+  document.getElementById('tbody').innerHTML=filtered.map((d,i)=>`
+    <tr>
+      <td class="no">${i+1}</td>
+      <td style="color:var(--color-text-secondary);font-size:12px">${fmtTgl(d.d)}</td>
+      <td>${d.desc} <span class="${badgeMap[d.cat]}">${labelMap[d.cat]}</span></td>
+      <td class="nominal">${fmt(d.nom)}</td>
+    </tr>
+  `).join('');
+  document.getElementById('s-filter').textContent=filtered.length;
+  document.getElementById('s-nominal').textContent=fmt(filtered.reduce((s,d)=>s+d.nom,0));
+}
+render();
+</script>
