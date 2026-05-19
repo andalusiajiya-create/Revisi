@@ -1,147 +1,332 @@
 <style>
 h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
-.wrap{padding:1rem 0}
-.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.2rem}
-.scard{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 14px;text-align:center}
-.scard .num{font-size:18px;font-weight:500;color:var(--color-text-primary)}
-.scard .lbl{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
-.filters{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
-.filters select{font-size:12px;padding:5px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary)}
-table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
-th{background:var(--color-background-secondary);color:var(--color-text-secondary);font-weight:500;text-align:left;padding:9px 10px;border-bottom:1px solid var(--color-border-tertiary);font-size:12px}
-td{padding:8px 10px;border-bottom:0.5px solid var(--color-border-tertiary);vertical-align:middle;color:var(--color-text-primary);font-size:13px}
-tr:last-child td{border-bottom:none}
+.wrap{padding:1rem 0;font-size:13px}
+.controls{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.controls input{flex:1;min-width:160px;font-size:13px;padding:6px 10px}
+.controls select{font-size:13px;padding:6px 8px}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:16px}
+.stat{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px}
+.stat-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:4px}
+.stat-val{font-size:18px;font-weight:500;color:var(--color-text-primary)}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-align:left;padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);white-space:nowrap}
+td{padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 tr:hover td{background:var(--color-background-secondary)}
-.badge{display:inline-block;font-size:11px;padding:2px 7px;border-radius:var(--border-radius-md);font-weight:500}
-.b-bensin{background:#E1F5EE;color:#085041}
-.b-flazz{background:#EEEDFE;color:#3C3489}
-.b-beli{background:#E6F1FB;color:#0C447C}
-.b-lain{background:#F1EFE8;color:#444441}
-.nominal{text-align:right;font-weight:500}
-.no{color:var(--color-text-secondary);font-size:12px}
+tr.deleted td{opacity:0.5;text-decoration:line-through}
+tr.deleted td:last-child{text-decoration:none;opacity:1}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);font-weight:500}
+.topup{background:#E1F5EE;color:#0F6E56}
+.pakai{background:#FAECE7;color:#993C1D}
+.rev-badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);font-weight:500;background:#FAEEDA;color:#854F0B;white-space:nowrap}
+.del-badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);font-weight:500;background:#FCEBEB;color:#A32D2D;white-space:nowrap}
+.num{text-align:right}
+.col-no{width:36px}
+.col-tgl{width:90px}
+.col-jam{width:54px}
+.col-desc{width:auto}
+.col-tipe{width:90px}
+.col-nom{width:96px}
+.col-rev{width:120px}
 </style>
+
+<h2 class="sr-only">Tabel transaksi Flazz dengan kolom revisi</h2>
+
 <div class="wrap">
-<h2 class="sr-only">Tabel transaksi April–Mei 2026</h2>
-<div class="summary">
-  <div class="scard"><div class="num">57</div><div class="lbl">Total transaksi</div></div>
-  <div class="scard"><div class="num" id="s-nominal">Rp 3.547.925</div><div class="lbl">Total pengeluaran</div></div>
-  <div class="scard"><div class="num" id="s-filter">57</div><div class="lbl">Ditampilkan</div></div>
+  <div class="controls">
+    <input type="text" id="search" placeholder="Cari deskripsi..." oninput="render()">
+    <select id="filter" onchange="render()">
+      <option value="">Semua tipe</option>
+      <option value="Top Up">Top Up (+)</option>
+      <option value="Pemakaian">Pemakaian (-)</option>
+    </select>
+    <select id="revFilter" onchange="render()">
+      <option value="">Semua</option>
+      <option value="rev">Ada revisi</option>
+    </select>
+  </div>
+  <div class="summary">
+    <div class="stat"><div class="stat-label">Saldo Awal</div><div class="stat-val" id="s-awal"></div></div>
+    <div class="stat"><div class="stat-label">Total Top Up</div><div class="stat-val" id="s-topup"></div></div>
+    <div class="stat"><div class="stat-label">Total Pemakaian</div><div class="stat-val" id="s-pakai"></div></div>
+    <div class="stat"><div class="stat-label">Saldo Sekarang</div><div class="stat-val" id="s-saldo"></div></div>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-no">No</th>
+          <th class="col-tgl">Tanggal</th>
+          <th class="col-jam">Jam</th>
+          <th class="col-desc">Deskripsi</th>
+          <th class="col-tipe">Tipe</th>
+          <th class="col-nom num">Nominal</th>
+          <th class="col-rev">Revisi</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div id="empty" style="text-align:center;padding:2rem;color:var(--color-text-secondary);display:none">Tidak ada data</div>
+  </div>
+  <div id="count" style="font-size:12px;color:var(--color-text-secondary);margin-top:8px;text-align:right"></div>
 </div>
-<div class="filters">
-  <select id="f-cat" onchange="render()">
-    <option value="">Semua kategori</option>
-    <option value="bensin">Bensin</option>
-    <option value="flazz">Top Up Flazz</option>
-    <option value="beli">Pembelian</option>
-    <option value="lain">Lainnya</option>
-  </select>
-  <select id="f-bulan" onchange="render()">
-    <option value="">Apr & Mei</option>
-    <option value="4">April</option>
-    <option value="5">Mei</option>
-  </select>
-</div>
-<table>
-  <thead>
-    <tr>
-      <th style="width:32px">No</th>
-      <th style="width:105px">Tanggal</th>
-      <th>Deskripsi Transaksi</th>
-      <th style="width:100px;text-align:right">Nominal</th>
-    </tr>
-  </thead>
-  <tbody id="tbody"></tbody>
-</table>
-</div>
+
 <script>
-const data=[
-  {d:"2026-04-09",desc:"Pembayaran Bensin",nom:70000,cat:"bensin"},
-  {d:"2026-04-10",desc:"Top Up Flazz",nom:30000,cat:"flazz"},
-  {d:"2026-04-12",desc:"Pembayaran Bensin",nom:70000,cat:"bensin"},
-  {d:"2026-04-14",desc:"Pembelian Tom & Jerry Label (1 Pcs)",nom:10000,cat:"beli"},
-  {d:"2026-04-16",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
-  {d:"2026-04-16",desc:"Pembayaran Bensin",nom:100000,cat:"bensin"},
-  {d:"2026-04-17",desc:"Isi Nitrogen Kendaraan Operasional",nom:20000,cat:"lain"},
-  {d:"2026-04-17",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
-  {d:"2026-04-20",desc:"Pembelian Supreme Cable 3x2,5 mm (8 m)",nom:238000,cat:"beli"},
-  {d:"2026-04-20",desc:"Pembelian Steker L (5 Pcs)",nom:60925,cat:"beli"},
-  {d:"2026-04-20",desc:"Pembelian Stop Kontak 1 L (3 Pcs)",nom:52500,cat:"beli"},
-  {d:"2026-04-21",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
-  {d:"2026-04-22",desc:"Pembayaran Bensin",nom:100000,cat:"bensin"},
-  {d:"2026-04-22",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
-  {d:"2026-04-23",desc:"Pembayaran Bensin",nom:100000,cat:"bensin"},
-  {d:"2026-04-23",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
-  {d:"2026-04-23",desc:"Top Up Flazz",nom:30000,cat:"flazz"},
-  {d:"2026-04-23",desc:"Top Up Flazz",nom:20000,cat:"flazz"},
-  {d:"2026-04-24",desc:"Pembayaran Bensin",nom:100000,cat:"bensin"},
-  {d:"2026-04-24",desc:"Top Up Flazz",nom:100000,cat:"flazz"},
-  {d:"2026-04-27",desc:"Pembayaran Bensin",nom:100000,cat:"bensin"},
-  {d:"2026-04-28",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
-  {d:"2026-04-28",desc:"Steam Mobil Operasional",nom:35000,cat:"lain"},
-  {d:"2026-04-29",desc:"Pembayaran Bensin",nom:100000,cat:"bensin"},
-  {d:"2026-04-29",desc:"Pembayaran Bensin",nom:70000,cat:"bensin"},
-  {d:"2026-04-29",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
-  {d:"2026-04-29",desc:"Top Up Flazz",nom:30000,cat:"flazz"},
-  {d:"2026-04-30",desc:"Pembelian Steker Broco (5 Pcs)",nom:65000,cat:"beli"},
-  {d:"2026-04-30",desc:"Pembelian Uticon 2 Lubang (4 Pcs)",nom:60000,cat:"beli"},
-  {d:"2026-04-30",desc:"Pembelian TC 5 (3 Btg)",nom:37500,cat:"beli"},
-  {d:"2026-04-30",desc:"Pembelian T Broco (1 Pcs)",nom:25000,cat:"beli"},
-  {d:"2026-04-30",desc:"Pembayaran Bensin",nom:100000,cat:"bensin"},
-  {d:"2026-04-30",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
-  {d:"2026-05-01",desc:"Pembayaran Bensin",nom:50000,cat:"bensin"},
-  {d:"2026-05-01",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
-  {d:"2026-05-03",desc:"Pembayaran Bensin",nom:50000,cat:"bensin"},
-  {d:"2026-05-03",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
-  {d:"2026-05-05",desc:"Pembayaran Bensin",nom:50000,cat:"bensin"},
-  {d:"2026-05-05",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
-  {d:"2026-05-06",desc:"Pembelian Tom & Jerry Label (2 Pcs)",nom:20000,cat:"beli"},
-  {d:"2026-05-06",desc:"Pembelian Kabel Etrena 3x2.5 (3 m)",nom:72000,cat:"beli"},
-  {d:"2026-05-06",desc:"Pembelian TC 5 (1 Pcs)",nom:12500,cat:"beli"},
-  {d:"2026-05-06",desc:"Pembelian Uticon 1 L (1 Pcs)",nom:10000,cat:"beli"},
-  {d:"2026-05-06",desc:"Pembayaran Bensin",nom:100000,cat:"bensin"},
-  {d:"2026-05-07",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
-  {d:"2026-05-07",desc:"Pembayaran Bensin",nom:70000,cat:"bensin"},
-  {d:"2026-05-08",desc:"Top Up Flazz",nom:30000,cat:"flazz"},
-  {d:"2026-05-08",desc:"Pembayaran Bensin",nom:100000,cat:"bensin"},
-  {d:"2026-05-08",desc:"Top Up Flazz",nom:30000,cat:"flazz"},
-  {d:"2026-05-09",desc:"Pembayaran Bensin",nom:50000,cat:"bensin"},
-  {d:"2026-05-09",desc:"Top Up Flazz",nom:30000,cat:"flazz"},
-  {d:"2026-05-11",desc:"Isi Bensin",nom:50000,cat:"bensin"},
-  {d:"2026-05-12",desc:"Isi Bensin",nom:50000,cat:"bensin"},
-  {d:"2026-05-13",desc:"Isi Bensin",nom:30000,cat:"bensin"},
-  {d:"2026-05-13",desc:"Isi Bensin",nom:100000,cat:"bensin"},
-  {d:"2026-05-18",desc:"Top Up Flazz",nom:50000,cat:"flazz"},
-  {d:"2026-05-18",desc:"Pembelian Steker T",nom:25000,cat:"beli"},
+const raw=[
+  {tgl:"6 Apr 2026",jam:"18:21",desc:"Parking Wang Plaza",tipe:"Pemakaian (-)"},
+  {tgl:"6 Apr 2026",jam:"19:00",desc:"Parking Club De Arjuna",tipe:"Pemakaian (-)"},
+  {tgl:"9 Apr 2026",jam:"13:01",desc:"Parking Harco Glodok",tipe:"Pemakaian (-)"},
+  {tgl:"9 Apr 2026",jam:"14:23",desc:"Parkir Citraland Mall",tipe:"Pemakaian (-)"},
+  {tgl:"10 Apr 2026",jam:"23:04",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"10 Apr 2026",jam:"23:11",desc:"GT Tebet 1",tipe:"Pemakaian (-)"},
+  {tgl:"16 Apr 2026",jam:"12:00",desc:"Parking Kawasan Rukan PIK",tipe:"Pemakaian (-)"},
+  {tgl:"16 Apr 2026",jam:"12:39",desc:"GT Kembangan Utama",tipe:"Pemakaian (-)"},
+  {tgl:"16 Apr 2026",jam:"12:57",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"16 Apr 2026",jam:"13:02",desc:"GT Gerbang Kamal Utama",tipe:"Pemakaian (-)"},
+  {tgl:"16 Apr 2026",jam:"14:17",desc:"GT Karawaci 3",tipe:"Pemakaian (-)"},
+  {tgl:"16 Apr 2026",jam:"14:19",desc:"Parking Supermall Karawaci",tipe:"Pemakaian (-)"},
+  {tgl:"16 Apr 2026",jam:"15:23",desc:"Parking Karawaci 4",tipe:"Pemakaian (-)"},
+  {tgl:"17 Apr 2026",jam:"12:12",desc:"Parking Central Park",tipe:"Pemakaian (-)"},
+  {tgl:"17 Apr 2026",jam:"12:25",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"17 Apr 2026",jam:"12:34",desc:"Parking Lippo Mall Nusantara",tipe:"Pemakaian (-)"},
+  {tgl:"17 Apr 2026",jam:"12:36",desc:"Parking Lippo Mall Nusantara",tipe:"Pemakaian (-)"},
+  {tgl:"17 Apr 2026",jam:"14:02",desc:"GT Kuningan 1",tipe:"Pemakaian (-)"},
+  {tgl:"17 Apr 2026",jam:"14:19",desc:"GT Kebon Jeruk 1",tipe:"Pemakaian (-)"},
+  {tgl:"20 Apr 2026",jam:"20:23",desc:"Parking Lippo Mall Puri",tipe:"Pemakaian (-)"},
+  {tgl:"21 Apr 2026",jam:"21:26",desc:"Parking Lippo Mall Puri",tipe:"Pemakaian (-)"},
+  {tgl:"21 Apr 2026",jam:"21:50",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"21 Apr 2026",jam:"21:52",desc:"Parking Lippo Mall Puri",tipe:"Pemakaian (-)"},
+  {tgl:"22 Apr 2026",jam:"0:22",desc:"GT Kedoya Puri",tipe:"Pemakaian (-)"},
+  {tgl:"22 Apr 2026",jam:"16:54",desc:"GT Kunciran 1",tipe:"Pemakaian (-)"},
+  {tgl:"22 Apr 2026",jam:"17:48",desc:"Parking Universitas Bina Nusantara",tipe:"Pemakaian (-)"},
+  {tgl:"22 Apr 2026",jam:"19:11",desc:"Parkir Binus Alam Sutera",tipe:"Pemakaian (-)"},
+  {tgl:"22 Apr 2026",jam:"19:18",desc:"GT Kunciran 2",tipe:"Pemakaian (-)"},
+  {tgl:"22 Apr 2026",jam:"19:40",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"22 Apr 2026",jam:"19:40",desc:"Parking Lippo Mall Puri",tipe:"Pemakaian (-)"},
+  {tgl:"23 Apr 2026",jam:"16:19",desc:"GT Kunciran 3",tipe:"Pemakaian (-)"},
+  {tgl:"23 Apr 2026",jam:"16:29",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"23 Apr 2026",jam:"16:39",desc:"GT Limo Utama 1",tipe:"Pemakaian (-)"},
+  {tgl:"23 Apr 2026",jam:"16:50",desc:"Parking Rs Sentra Medika Cisalak",tipe:"Pemakaian (-)"},
+  {tgl:"23 Apr 2026",jam:"17:36",desc:"GT Cisalak",tipe:"Pemakaian (-)"},
+  {tgl:"23 Apr 2026",jam:"17:47",desc:"GT Citeureup 1",tipe:"Pemakaian (-)"},
+  {tgl:"23 Apr 2026",jam:"17:58",desc:"Parking RS Sentra Medika Cibinong",tipe:"Pemakaian (-)"},
+  {tgl:"23 Apr 2026",jam:"19:53",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"23 Apr 2026",jam:"20:06",desc:"GT Sentul Selatan 1",tipe:"Pemakaian (-)"},
+  {tgl:"23 Apr 2026",jam:"20:31",desc:"Parking Marktlane Sentul",tipe:"Pemakaian (-)"},
+  {tgl:"23 Apr 2026",jam:"21:19",desc:"GT Sentul Selatan 2",tipe:"Pemakaian (-)"},
+  {tgl:"23 Apr 2026",jam:"21:22",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"23 Apr 2026",jam:"21:48",desc:"GT Cililitan",tipe:"Pemakaian (-)"},
+  {tgl:"23 Apr 2026",jam:"22:08",desc:"GT Kebon Jeruk 1",tipe:"Pemakaian (-)"},
+  {tgl:"24 Apr 2026",jam:"16:00",desc:"GT Kebon Jeruk 2",tipe:"Pemakaian (-)"},
+  {tgl:"24 Apr 2026",jam:"16:02",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"24 Apr 2026",jam:"16:13",desc:"GT Tomang",tipe:"Pemakaian (-)"},
+  {tgl:"24 Apr 2026",jam:"16:59",desc:"GT Cikarang Barat 3",tipe:"Pemakaian (-)"},
+  {tgl:"24 Apr 2026",jam:"17:18",desc:"Parking RS Sentra Medika Cikarang",tipe:"Pemakaian (-)"},
+  {tgl:"24 Apr 2026",jam:"18:17",desc:"Parking Mall Lippo Cikarang",tipe:"Pemakaian (-)"},
+  {tgl:"24 Apr 2026",jam:"18:43",desc:"GT Cikarang Barat 5",tipe:"Pemakaian (-)"},
+  {tgl:"24 Apr 2026",jam:"19:30",desc:"Parking Summarecon Mall Bekasi",tipe:"Pemakaian (-)"},
+  {tgl:"24 Apr 2026",jam:"21:40",desc:"GT Cawang",tipe:"Pemakaian (-)"},
+  {tgl:"24 Apr 2026",jam:"21:59",desc:"GT Kebon Jeruk 1",tipe:"Pemakaian (-)"},
+  {tgl:"26 Apr 2026",jam:"0:50",desc:"Parking GBK Basket Hall",tipe:"Pemakaian (-)"},
+  {tgl:"27 Apr 2026",jam:"16:59",desc:"Parking Kamaja Social Space",tipe:"Pemakaian (-)"},
+  {tgl:"28 Apr 2026",jam:"14:44",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"28 Apr 2026",jam:"14:45",desc:"GT Meruya Selatan 1",tipe:"Pemakaian (-)"},
+  {tgl:"28 Apr 2026",jam:"15:23",desc:"Parking Pace Padel",tipe:"Pemakaian (-)"},
+  {tgl:"28 Apr 2026",jam:"16:04",desc:"Parking Mall Cijantung",tipe:"Pemakaian (-)"},
+  {tgl:"28 Apr 2026",jam:"16:22",desc:"GT Gedong 2",tipe:"Pemakaian (-)"},
+  {tgl:"29 Apr 2026",jam:"16:26",desc:"GT Meruya Selatan 1",tipe:"Pemakaian (-)"},
+  {tgl:"29 Apr 2026",jam:"17:47",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"29 Apr 2026",jam:"17:54",desc:"GT Cisalak 1",tipe:"Pemakaian (-)"},
+  {tgl:"29 Apr 2026",jam:"17:57",desc:"GT Cimanggis 2",tipe:"Pemakaian (-)"},
+  {tgl:"29 Apr 2026",jam:"18:02",desc:"Parking Cibubur Junction",tipe:"Pemakaian (-)"},
+  {tgl:"29 Apr 2026",jam:"18:49",desc:"GT Ciawi 1",tipe:"Pemakaian (-)"},
+  {tgl:"29 Apr 2026",jam:"21:19",desc:"GT Ciawi 2",tipe:"Pemakaian (-)"},
+  {tgl:"29 Apr 2026",jam:"22:34",desc:"Parking AEON Mall Sentul City",tipe:"Pemakaian (-)"},
+  {tgl:"29 Apr 2026",jam:"22:54",desc:"GT Sentul Selatan 2",tipe:"Pemakaian (-)"},
+  {tgl:"29 Apr 2026",jam:"23:01",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"29 Apr 2026",jam:"23:29",desc:"GT Cililitan",tipe:"Pemakaian (-)"},
+  {tgl:"29 Apr 2026",jam:"23:47",desc:"GT Kebon Jeruk 1",tipe:"Pemakaian (-)"},
+  {tgl:"30 Apr 2026",jam:"15:05",desc:"Parking Mall Ambassador",tipe:"Pemakaian (-)"},
+  {tgl:"30 Apr 2026",jam:"16:41",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"30 Apr 2026",jam:"20:45",desc:"Parking Pasaraya Blok M",tipe:"Pemakaian (-)"},
+  {tgl:"1 May 2026",jam:"16:51",desc:"GT Kebon Jeruk 2",tipe:"Pemakaian (-)"},
+  {tgl:"1 May 2026",jam:"16:56",desc:"GT Tomang",tipe:"Pemakaian (-)"},
+  {tgl:"1 May 2026",jam:"17:33",desc:"GT Cibubur 1",tipe:"Pemakaian (-)"},
+  {tgl:"1 May 2026",jam:"18:20",desc:"GT Cibubur 2",tipe:"Pemakaian (-)"},
+  {tgl:"1 May 2026",jam:"18:32",desc:"GT Cililitan",tipe:"Pemakaian (-)"},
+  {tgl:"1 May 2026",jam:"19:59",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"1 May 2026",jam:"19:59",desc:"Parkir JIEXPO Kemayoran",tipe:"Pemakaian (-)"},
+  {tgl:"1 May 2026",jam:"20:10",desc:"GT Kemayoran",tipe:"Pemakaian (-)"},
+  {tgl:"3 May 2026",jam:"21:45",desc:"Parking Pondok Indah Mall 1",tipe:"Pemakaian (-)"},
+  {tgl:"3 May 2026",jam:"22:55",desc:"GT Pondok Pinang",tipe:"Pemakaian (-)"},
+  {tgl:"3 May 2026",jam:"23:20",desc:"GT Cibubur 1",tipe:"Pemakaian (-)"},
+  {tgl:"3 May 2026",jam:"23:46",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"3 May 2026",jam:"23:47",desc:"GT Cibubur 2",tipe:"Pemakaian (-)"},
+  {tgl:"3 May 2026",jam:"23:56",desc:"GT Cililitan",tipe:"Pemakaian (-)"},
+  {tgl:"5 May 2026",jam:"12:57",desc:"GT Meruya Selatan 1",tipe:"Pemakaian (-)"},
+  {tgl:"5 May 2026",jam:"15:27",desc:"GT Cibubur 2",tipe:"Pemakaian (-)"},
+  {tgl:"5 May 2026",jam:"15:35",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"5 May 2026",jam:"15:37",desc:"GT Cililitan",tipe:"Pemakaian (-)"},
+  {tgl:"5 May 2026",jam:"16:09",desc:"GT Kebon Jeruk 1",tipe:"Pemakaian (-)"},
+  {tgl:"6 May 2026",jam:"20:25",desc:"GT Kembangan Utara",tipe:"Pemakaian (-)"},
+  {tgl:"6 May 2026",jam:"20:37",desc:"Parking Kawasan Rukan PIK",tipe:"Pemakaian (-)"},
+  {tgl:"6 May 2026",jam:"20:45",desc:"Parking PIK Avenue",tipe:"Pemakaian (-)"},
+  {tgl:"6 May 2026",jam:"21:44",desc:"Parking Kelapa Gading Square",tipe:"Pemakaian (-)"},
+  {tgl:"7 May 2026",jam:"0:09",desc:"Parking Stasiun Bekasi",tipe:"Pemakaian (-)"},
+  {tgl:"7 May 2026",jam:"0:38",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"7 May 2026",jam:"0:44",desc:"GT Bekasi Barat 1",tipe:"Pemakaian (-)"},
+  {tgl:"7 May 2026",jam:"0:59",desc:"GT Halim",tipe:"Pemakaian (-)"},
+  {tgl:"7 May 2026",jam:"1:16",desc:"GT Kebon Jeruk 1",tipe:"Pemakaian (-)"},
+  {tgl:"7 May 2026",jam:"18:14",desc:"GT Kebon Jeruk 2",tipe:"Pemakaian (-)"},
+  {tgl:"7 May 2026",jam:"18:16",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"7 May 2026",jam:"18:23",desc:"GT Tomang",tipe:"Pemakaian (-)"},
+  {tgl:"7 May 2026",jam:"19:08",desc:"Parking Kuningan City",tipe:"Pemakaian (-)"},
+  {tgl:"7 May 2026",jam:"19:47",desc:"Parking Kota Kasablanka",tipe:"Pemakaian (-)"},
+  {tgl:"7 May 2026",jam:"22:44",desc:"Parkir Plaza Senayan",tipe:"Pemakaian (-)"},
+  {tgl:"7 May 2026",jam:"23:32",desc:"Parkir Ashta Mall District 8",tipe:"Pemakaian (-)"},
+  {tgl:"7 May 2026",jam:"23:52",desc:"Parking Mal Atrium Senen",tipe:"Pemakaian (-)"},
+  {tgl:"8 May 2026",jam:"0:24",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"8 May 2026",jam:"0:34",desc:"Parking Stasiun Pasar Senen",tipe:"Pemakaian (-)"},
+  {tgl:"8 May 2026",jam:"1:59",desc:"GT Kebon Jeruk 1",tipe:"Pemakaian (-)"},
+  {tgl:"8 May 2026",jam:"19:42",desc:"GT Karawaci 3",tipe:"Pemakaian (-)"},
+  {tgl:"8 May 2026",jam:"19:44",desc:"Parking Supermall Karawaci",tipe:"Pemakaian (-)"},
+  {tgl:"8 May 2026",jam:"20:15",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"8 May 2026",jam:"22:24",desc:"GT Tangerang 2",tipe:"Pemakaian (-)"},
+  {tgl:"8 May 2026",jam:"23:23",desc:"Parking Stasiun Gambir",tipe:"Pemakaian (-)"},
+  {tgl:"9 May 2026",jam:"20:08",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"9 May 2026",jam:"20:12",desc:"GT Alam Sutera",tipe:"Pemakaian (-)",revisi:"Dihapus"},
+  {tgl:"9 May 2026",jam:"20:23",desc:"Parking The Flavor Bliss",tipe:"Pemakaian (-)"},
+  {tgl:"9 May 2026",jam:"22:08",desc:"Parking Tangerang City",tipe:"Pemakaian (-)"},
+  {tgl:"9 May 2026",jam:"23:29",desc:"Parkir TangCity Mall",tipe:"Pemakaian (-)"},
+  {tgl:"10 May 2026",jam:"0:40",desc:"GT Tangerang 2",tipe:"Pemakaian (-)"},
+  {tgl:"10 May 2026",jam:"20:12",desc:"GT Kunciran 1",tipe:"Pemakaian (-)",revisi:"Tanggal asli: 09 Mei 2026"},
+  {tgl:"12 May 2026",jam:"20:24",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"12 May 2026",jam:"20:27",desc:"GT Kebon Jeruk 2",tipe:"Pemakaian (-)"},
+  {tgl:"12 May 2026",jam:"20:37",desc:"GT Tomang",tipe:"Pemakaian (-)"},
+  {tgl:"12 May 2026",jam:"21:28",desc:"GT Bogor 1",tipe:"Pemakaian (-)"},
+  {tgl:"12 May 2026",jam:"21:43",desc:"Parking Stasiun Bogor",tipe:"Pemakaian (-)"},
+  {tgl:"18 May 2026",jam:"11:46",desc:"Top Up Flazz",tipe:"Top Up (+)"},
+  {tgl:"18 May 2026",jam:"13:44",desc:"GT Kebon Jeruk",tipe:"Pemakaian (-)"},
+  {tgl:"18 May 2026",jam:"13:59",desc:"GT Tomang",tipe:"Pemakaian (-)"},
+  {tgl:"18 May 2026",jam:"14:49",desc:"Parkir Pluit Village",tipe:"Pemakaian (-)"},
+  {tgl:"18 May 2026",jam:"15:37",desc:"GT Kamal Utama",tipe:"Pemakaian (-)"},
+  {tgl:"18 May 2026",jam:"16:21",desc:"Parkir Daan Mogot",tipe:"Pemakaian (-)"},
+  {tgl:"18 May 2026",jam:"17:15",desc:"Parkir Lippo Mall Puri",tipe:"Pemakaian (-)"},
 ];
 
-const bulanID=["","Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agt","Sep","Okt","Nov","Des"];
-function fmtTgl(s){
-  const [y,m,dd]=s.split("-");
-  return `${parseInt(dd)} ${bulanID[parseInt(m)]} ${y}`;
+const nominals={
+  "Top Up (+)":{
+    "10 Apr 2026 23:04":30000,"16 Apr 2026 12:57":50000,"17 Apr 2026 12:25":50000,
+    "21 Apr 2026 21:50":50000,"22 Apr 2026 19:40":50000,"23 Apr 2026 16:29":50000,
+    "23 Apr 2026 19:53":30000,"23 Apr 2026 21:22":20000,"24 Apr 2026 16:02":100000,
+    "28 Apr 2026 14:44":50000,"29 Apr 2026 17:47":50000,"29 Apr 2026 23:01":30000,
+    "30 Apr 2026 16:41":50000,"1 May 2026 19:59":50000,"3 May 2026 23:46":50000,
+    "5 May 2026 15:35":50000,"7 May 2026 0:38":50000,"7 May 2026 18:16":50000,
+    "8 May 2026 0:24":30000,"8 May 2026 20:15":30000,"9 May 2026 20:08":30000,
+    "12 May 2026 20:24":30000,"18 May 2026 11:46":50000
+  },
+  "Pemakaian (-)":{
+    "6 Apr 2026 18:21":5000,"6 Apr 2026 19:00":7000,"9 Apr 2026 13:01":7000,
+    "9 Apr 2026 14:23":7000,"10 Apr 2026 23:11":11000,"16 Apr 2026 12:00":7500,
+    "16 Apr 2026 12:39":17000,"16 Apr 2026 13:02":17000,"16 Apr 2026 14:17":8500,
+    "16 Apr 2026 14:19":10000,"16 Apr 2026 15:23":8500,"17 Apr 2026 12:12":7000,
+    "17 Apr 2026 12:34":5000,"17 Apr 2026 12:36":9000,"17 Apr 2026 14:02":11000,
+    "17 Apr 2026 14:19":8500,"20 Apr 2026 20:23":15000,"21 Apr 2026 21:26":5000,
+    "21 Apr 2026 21:52":9000,"22 Apr 2026 0:22":8500,"22 Apr 2026 16:54":8500,
+    "22 Apr 2026 17:48":5000,"22 Apr 2026 19:11":5000,"22 Apr 2026 19:18":8500,
+    "22 Apr 2026 19:40":9000,"23 Apr 2026 16:19":8500,"23 Apr 2026 16:39":55000,
+    "23 Apr 2026 16:50":5000,"23 Apr 2026 17:36":15000,"23 Apr 2026 17:47":7500,
+    "23 Apr 2026 17:58":7000,"23 Apr 2026 20:06":7500,"23 Apr 2026 20:31":5000,
+    "23 Apr 2026 21:19":7500,"23 Apr 2026 21:48":11000,"23 Apr 2026 22:08":8500,
+    "24 Apr 2026 16:00":8500,"24 Apr 2026 16:13":11000,"24 Apr 2026 16:59":9500,
+    "24 Apr 2026 17:18":4000,"24 Apr 2026 18:17":5000,"24 Apr 2026 18:43":9500,
+    "24 Apr 2026 19:30":11500,"24 Apr 2026 21:40":11000,"24 Apr 2026 21:59":8500,
+    "26 Apr 2026 0:50":8000,"27 Apr 2026 16:59":7000,"28 Apr 2026 14:45":17000,
+    "28 Apr 2026 15:23":5000,"28 Apr 2026 16:04":7000,"28 Apr 2026 16:22":17000,
+    "29 Apr 2026 16:26":17000,"29 Apr 2026 17:54":15000,"29 Apr 2026 17:57":7500,
+    "29 Apr 2026 18:02":5000,"29 Apr 2026 18:49":7500,"29 Apr 2026 21:19":7500,
+    "29 Apr 2026 22:34":5000,"29 Apr 2026 22:54":7500,"29 Apr 2026 23:29":11000,
+    "29 Apr 2026 23:47":8500,"30 Apr 2026 15:05":5000,"30 Apr 2026 20:45":6000,
+    "1 May 2026 16:51":8500,"1 May 2026 16:56":11000,"1 May 2026 17:33":7500,
+    "1 May 2026 18:20":7500,"1 May 2026 18:32":11000,"1 May 2026 19:59":7000,
+    "1 May 2026 20:10":11000,"3 May 2026 21:45":7000,"3 May 2026 22:55":17000,
+    "3 May 2026 23:20":7500,"3 May 2026 23:47":7500,"3 May 2026 23:56":11000,
+    "5 May 2026 12:57":17000,"5 May 2026 15:27":7500,"5 May 2026 15:37":11000,
+    "5 May 2026 16:09":8500,"6 May 2026 20:25":17000,"6 May 2026 20:37":7500,
+    "6 May 2026 20:45":5000,"6 May 2026 21:44":10000,"7 May 2026 0:09":6000,
+    "7 May 2026 0:44":9500,"7 May 2026 0:59":11000,"7 May 2026 1:16":8500,
+    "7 May 2026 18:14":8500,"7 May 2026 18:23":11000,"7 May 2026 19:08":5000,
+    "7 May 2026 19:47":5000,"7 May 2026 22:44":16000,"7 May 2026 23:32":7000,
+    "7 May 2026 23:52":20000,"8 May 2026 0:34":5000,"8 May 2026 1:59":8500,
+    "8 May 2026 19:42":8500,"8 May 2026 19:44":10000,"8 May 2026 22:24":8500,
+    "8 May 2026 23:23":5000,"9 May 2026 20:12":8500,"9 May 2026 20:23":5000,
+    "9 May 2026 22:08":5000,"9 May 2026 23:29":6000,"10 May 2026 0:40":8500,
+    "10 May 2026 20:12":8500,"12 May 2026 20:27":8500,"12 May 2026 20:37":11000,
+    "12 May 2026 21:28":7500,"12 May 2026 21:43":5000,"18 May 2026 13:44":8500,
+    "18 May 2026 13:59":11000,"18 May 2026 14:49":5000,"18 May 2026 15:37":17000,
+    "18 May 2026 16:21":5000,"18 May 2026 17:15":5000
+  }
+};
+
+function parseDate(tgl,jam){
+  const months={"Jan":0,"Feb":1,"Mar":2,"Apr":3,"May":4,"Jun":5,"Jul":6,"Aug":7,"Sep":8,"Oct":9,"Nov":10,"Dec":11};
+  const p=tgl.split(" ");
+  return new Date(parseInt(p[2]),months[p[1]],parseInt(p[0]),...jam.split(":").map(Number));
 }
-function fmt(n){return"Rp "+n.toLocaleString('id-ID');}
-const badgeMap={bensin:"badge b-bensin",flazz:"badge b-flazz",beli:"badge b-beli",lain:"badge b-lain"};
-const labelMap={bensin:"Bensin",flazz:"Top Up Flazz",beli:"Pembelian",lain:"Lainnya"};
+function fmt(n){return "Rp "+n.toLocaleString("id-ID")}
+
+const sorted=[...raw].sort((a,b)=>parseDate(a.tgl,a.jam)-parseDate(b.tgl,b.jam));
+
+let totalTopup=0,totalPakai=0;
+sorted.forEach(r=>{
+  const key=r.tgl+" "+r.jam;
+  const n=(r.tipe==="Top Up (+)"?nominals["Top Up (+)"]:nominals["Pemakaian (-)"])[key]||0;
+  if(r.tipe==="Top Up (+)")totalTopup+=n; else totalPakai+=n;
+});
+const saldoAwal=38800;
+document.getElementById("s-awal").textContent=fmt(saldoAwal);
+document.getElementById("s-topup").textContent=fmt(totalTopup);
+document.getElementById("s-pakai").textContent=fmt(totalPakai);
+document.getElementById("s-saldo").textContent=fmt(saldoAwal+totalTopup-totalPakai);
 
 function render(){
-  const cat=document.getElementById('f-cat').value;
-  const bln=document.getElementById('f-bulan').value;
-  const filtered=data.filter(d=>{
-    const m=d.d.split("-")[1];
-    if(cat && d.cat!==cat) return false;
-    if(bln && m!==bln.padStart(2,"0")) return false;
-    return true;
+  const q=document.getElementById("search").value.toLowerCase();
+  const f=document.getElementById("filter").value;
+  const rv=document.getElementById("revFilter").value;
+  let rows=sorted.filter(r=>{
+    const mQ=!q||r.desc.toLowerCase().includes(q)||r.tgl.toLowerCase().includes(q);
+    const mF=!f||r.tipe.includes(f);
+    const mR=rv!=="rev"||(r.revisi&&r.revisi.length>0);
+    return mQ&&mF&&mR;
   });
-  document.getElementById('tbody').innerHTML=filtered.map((d,i)=>`
-    <tr>
-      <td class="no">${i+1}</td>
-      <td style="color:var(--color-text-secondary);font-size:12px">${fmtTgl(d.d)}</td>
-      <td>${d.desc} <span class="${badgeMap[d.cat]}">${labelMap[d.cat]}</span></td>
-      <td class="nominal">${fmt(d.nom)}</td>
-    </tr>
-  `).join('');
-  document.getElementById('s-filter').textContent=filtered.length;
-  document.getElementById('s-nominal').textContent=fmt(filtered.reduce((s,d)=>s+d.nom,0));
+  const tbody=document.getElementById("tbody");
+  const empty=document.getElementById("empty");
+  if(!rows.length){tbody.innerHTML="";empty.style.display="block";}
+  else{
+    empty.style.display="none";
+    let no=1;
+    tbody.innerHTML=rows.map(r=>{
+      const key=r.tgl+" "+r.jam;
+      const n=(r.tipe==="Top Up (+)"?nominals["Top Up (+)"]:nominals["Pemakaian (-)"])[key]||0;
+      const isTopUp=r.tipe==="Top Up (+)";
+      const isDel=r.revisi==="Dihapus";
+      const badge=isTopUp
+        ?`<span class="badge topup">Top Up (+)</span>`
+        :`<span class="badge pakai">Pemakaian (-)</span>`;
+      const nomStr=isTopUp
+        ?`<span style="color:#0F6E56">+${fmt(n)}</span>`
+        :`<span style="color:#993C1D">-${fmt(n)}</span>`;
+      let revCell=`<span style="color:var(--color-text-secondary);font-size:12px">—</span>`;
+      if(r.revisi==="Dihapus"){
+        revCell=`<span class="del-badge"><i class="ti ti-trash" style="font-size:12px;vertical-align:-1px;margin-right:4px" aria-hidden="true"></i>Dihapus</span>`;
+      } else if(r.revisi){
+        revCell=`<span class="rev-badge"><i class="ti ti-alert-triangle" style="font-size:12px;vertical-align:-1px;margin-right:4px" aria-hidden="true"></i>${r.revisi}</span>`;
+      }
+      const rowClass=isDel?"deleted":"";
+      return `<tr class="${rowClass}"><td>${no++}</td><td>${r.tgl}</td><td>${r.jam}</td><td title="${r.desc}">${r.desc}</td><td>${badge}</td><td class="num">${nomStr}</td><td>${revCell}</td></tr>`;
+    }).join("");
+  }
+  document.getElementById("count").textContent=rows.length+" dari "+sorted.length+" transaksi";
 }
 render();
 </script>
